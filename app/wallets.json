@@ -1,0 +1,14 @@
+[
+  {
+    "currency": "Ethereum",
+    "address": "ethereum_address_6fdf1995",
+    "encrypted_private_key": "static/wallets\\ethereum_address_6fdf1995_private.enc",
+    "qr_code": "/static/wallets/ethereum_address_6fdf1995.png"
+  },
+  {
+    "currency": "Bitcoin",
+    "address": "bitcoin_address_0ca8c4c7",
+    "encrypted_private_key": "static/wallets\\bitcoin_address_0ca8c4c7_private.enc",
+    "qr_code": "/static/wallets/bitcoin_address_0ca8c4c7.png"
+  }
+]

@@ -1,0 +1,8 @@
+cryptography
+web3
+bitcoinlib
+qrcode
+flask
+sqlite3
+flask-socketio
+pillow

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Wallet Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Crypto Wallet Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-center">Crypto Wallet Management</h1>
+
+        <!-- Create Wallet Section -->
+        <div class="mt-4">
+            <h3>Create Wallet</h3>
+            <form id="createWalletForm" onsubmit="createWallet(event)">
+                <div class="mb-3">
+                    <label for="currency" class="form-label">Select Currency</label>
+                    <select id="currency" class="form-select">
+                        <option value="ethereum">Ethereum</option>
+                        <option value="bitcoin">Bitcoin</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Wallet</button>
+            </form>
+            <div id="walletResult" class="mt-3"></div>
+        </div>
+
+        <!-- Wallet Table -->
+        <div class="mt-5">
+            <h3>Your Wallets</h3>
+            <div id="walletTable" class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Currency</th>
+                            <th>Wallet Address</th>
+                            <th>QR Code</th>
+                        </tr>
+                    </thead>
+                    <tbody id="walletTableBody">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Send Currency Section -->
+        <div class="mt-5">
+            <h3>Send Currency</h3>
+            <form id="sendCurrencyForm" onsubmit="sendCurrency(event)">
+                <div class="mb-3">
+                    <label for="sendCurrency" class="form-label">Select Currency</label>
+                    <select id="sendCurrency" class="form-select">
+                        <option value="ethereum">Ethereum</option>
+                        <option value="bitcoin">Bitcoin</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="recipientAddress" class="form-label">Recipient Address</label>
+                    <input type="text" id="recipientAddress" class="form-control" placeholder="Enter recipient's wallet address" required>
+                </div>
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input type="number" id="amount" class="form-control" placeholder="Enter amount to send" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+            <div id="sendResult" class="mt-3"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        // Create Wallet
+        async function createWallet(event) {
+    event.preventDefault();
+    const currency = document.getElementById("currency").value;
+
+            const response = await fetch(`/create_wallet/${currency}`);
+            const data = await response.json();
+
+            const walletResult = document.getElementById("walletResult");
+            walletResult.innerHTML = `
+                <div class="alert alert-success">
+                    <strong>Wallet Created!</strong> Address: ${data.address}
+                    <br>
+                    <img src="${data.qr_code}" alt="QR Code" width="100">
+                </div>
+            `;
+        }
+
+        // Fetch Wallets
+        async function fetchWallets() {
+            const response = await fetch('/api/wallets');
+            const wallets = await response.json();
+
+            const walletTableBody = document.getElementById("walletTableBody");
+            walletTableBody.innerHTML = '';
+            wallets.forEach(wallet => {
+                const row = `
+                    <tr>
+                        <td>${wallet.currency}</td>
+                        <td>${wallet.address}</td>
+                        <td><img src="${wallet.qr_code}" alt="QR Code" width="50"></td>
+                    </tr>
+                `;
+                walletTableBody.innerHTML += row;
+            });
+        }
+
+        // Send Currency
+        async function sendCurrency(event) {
+            event.preventDefault();
+            const currency = document.getElementById("sendCurrency").value;
+            const recipient = document.getElementById("recipientAddress").value;
+            const amount = document.getElementById("amount").value;
+
+            const response = await fetch('/send_currency', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currency, recipient, amount })
+            });
+
+            const result = await response.json();
+            const sendResult = document.getElementById("sendResult");
+
+            if (response.ok) {
+                sendResult.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+            } else {
+                sendResult.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
+            }
+        }
+
+        // Real-Time Updates
+        socket.on('wallet_update', fetchWallets);
+
+        // Initialize Wallet Table
+        fetchWallets();
+    </script>
+</body>
+</html>
